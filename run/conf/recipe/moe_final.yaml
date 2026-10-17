@@ -19,5 +19,6 @@ data:
   ehr_version: v2              # extended ICU variable set (65 continuous variables)
   ehr_stats: true              # EHR encoder: + 48 h summary-statistics branch
   ehr_delta: true              # BiLSTM input: + hours since last measurement
-  note_variant: tok            # mean of ClinicalBERT token states instead of [CLS]
+  note_variant: tok_tfidf      # mean of ClinicalBERT token states + TF-IDF SVD embedding
+  note_logit: true             # + cross-fitted TF-IDF logistic-regression logit of the task
   history: true                # + prior-utilisation / admission-type codes (known at admission)
