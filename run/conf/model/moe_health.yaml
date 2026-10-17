@@ -1,0 +1,22 @@
+# MoE-Health (paper Section 3.2 + Fig. 2). Sizes the paper does not state are set here.
+name: moe_health
+method: moe_health
+d_h: 256
+n_heads: 4
+attn_dropout: 0.1
+lstm_hidden: 128
+lstm_layers: 1
+static_emb_dim: 16
+expert_hidden: 512
+gate_hidden: 256        # d_R
+head_hidden: 128
+dropout: 0.1
+experts: all7           # all7 (Fig. 2) | observed4 (text: one per observed combination)
+pretrain: superset      # superset | exact | generic | none
+encoder_pretrain: none  # none | unimodal (stage 0: per-modality encoder pretraining)
+top_k: 2
+gating: learned         # learned | uniform (w/o dynamic gating)
+missing: learned        # learned | zeros (w/o missing indicator)
+expert_output: repr     # repr (Fig. 2 Add & Norm + head) | logit (Eq. 12 literal)
+balance: cv             # cv (Eq. 16) | switch | none
+alpha: 0.01

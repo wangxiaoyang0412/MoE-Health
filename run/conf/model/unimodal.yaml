@@ -1,0 +1,6 @@
+defaults:
+  - moe_health
+  - _self_
+name: unimodal_${.modality}
+method: unimodal
+modality: ehr           # ehr | note | cxr

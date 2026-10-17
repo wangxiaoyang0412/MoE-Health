@@ -1,0 +1,23 @@
+# @package _global_
+# Tuned MoE-Health recipe (settings chosen on validation AUROC). The mechanism is the paper's:
+# modality encoders, learned missing embeddings, MHA, gated top-2 combination experts and
+# BCE + alpha * CV balance loss; the training recipe and the EHR inputs differ.
+model:
+  dropout: 0.5
+  encoder_pretrain: unimodal   # stage 0: each encoder pretrained on its own modality
+train:
+  lr: 3.0e-4                   # paper: 1e-4 with batch 32
+  batch_size: 128
+  weight_decay: 0.3
+  evals_per_epoch: 4
+  encoder_lr_mult: 0.1         # stages A / C: pretrained encoders get lr x 0.1
+  gate_lr_mult: 10.0
+  modality_dropout: 0.3
+gate_warmup:
+  max_epochs: 5
+data:
+  ehr_version: v2              # extended ICU variable set (65 continuous variables)
+  ehr_stats: true              # EHR encoder: + 48 h summary-statistics branch
+  ehr_delta: true              # BiLSTM input: + hours since last measurement
+  note_variant: tok            # mean of ClinicalBERT token states instead of [CLS]
+  history: true                # + prior-utilisation / admission-type codes (known at admission)

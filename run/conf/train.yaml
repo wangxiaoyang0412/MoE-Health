@@ -1,0 +1,56 @@
+# Training entry point (run/train.py). Paper settings: AdamW, lr 1e-4, batch 32,
+# <= 50 epochs, early stopping on val AUROC, alpha = 0.01, top-k = 2, 4 attention heads.
+defaults:
+  - paths: default
+  - model: moe_health
+  - _self_
+
+task: mortality        # mortality | los | readmission
+cohort: corrected      # corrected (primary) | faithful (paper cohort and labels)
+seed: 0                # selects split_s{seed} and the init seed
+device: cuda:0
+
+data:
+  cxr_variant: first   # first AP image in 48 h (paper) | mean
+  use_meds: true
+  modalities: ETI      # Table 2: mask modalities outside this set for every sample
+  note_variant: cls    # cls (paper Eq. 7) | tok (mean of token states)
+  ehr_delta: false     # add hours-since-last-measurement channels to the BiLSTM input
+  ehr_stats: false     # add HAIM-style 48 h summary statistics as an EHR-encoder branch
+  ehr_version: v1      # v1 (HAIM variable list) | v2 (extended ICU variable set)
+  history: false       # + prior-utilisation / admission-type codes (known at admission) as static inputs
+
+train:
+  lr: 1.0e-4
+  weight_decay: 0.01
+  batch_size: 32
+  max_epochs: 50
+  patience: 10
+  grad_clip: 1.0
+  eval_batch_size: 1024
+  gate_lr_mult: 1.0    # MoE-Health stage C only
+  encoder_lr_mult: 1.0 # MoE-Health stage C only (encoders, missing/type embeddings, MHA)
+  evals_per_epoch: 1   # validation checks per epoch
+  modality_dropout: 0.0  # MoE-Health: training-time drop prob for present notes / CXR
+  ema_decay: 0.0       # > 0: validate / keep an EMA of the weights
+
+stage_a:               # MoE-Health encoder warm-up
+  max_epochs: 30
+  patience: 5
+stage_b:               # MoE-Health per-combination expert pretraining
+  max_epochs: 20
+  patience: 5
+gate_warmup:           # MoE-Health optional gate-only epochs before stage C (0 = off)
+  max_epochs: 0
+  patience: 3
+
+exp: main
+tag: ""                # variant suffix, e.g. _top1
+output_dir: ${paths.run_dir}/${exp}/${model.name}${tag}/${cohort}/${task}/seed${seed}
+
+hydra:
+  run:
+    dir: ${output_dir}
+  output_subdir: .hydra
+  job:
+    chdir: false
