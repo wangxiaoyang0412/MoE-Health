@@ -3,6 +3,7 @@ name = "moe-health"
 version = "0.1.0"
 description = "MoE-Health: a mixture-of-experts framework for robust multimodal healthcare prediction (ACM BCB 2025)"
 requires-python = ">=3.10"
+license = {text = "MIT"}
 # torch / torchvision are installed separately (CUDA 12.6 wheels), see run/pipeline/setup_env.sh
 dependencies = [
     "numpy>=1.26",

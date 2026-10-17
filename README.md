@@ -138,3 +138,8 @@ tests/             unit and smoke tests on synthetic data
   doi       = {10.1145/3765612.3767207}
 }
 ```
+
+## License
+
+MIT, see [`LICENSE`](LICENSE). The MIMIC datasets are not covered by this license; their use is governed by the
+PhysioNet credentialed data use agreements.
