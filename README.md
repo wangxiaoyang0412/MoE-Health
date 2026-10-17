@@ -51,6 +51,7 @@ bash run/pipeline/setup_env.sh        # uv venv (Python 3.11), torch 2.7.1 + CUD
 .venv/bin/python run/pipeline/extract_notes.py notes.device=cuda:0   # Bio_ClinicalBERT report embeddings
 .venv/bin/python run/pipeline/extract_cxr.py cxr.device=cuda:0       # DenseNet-121 CXR features
 .venv/bin/python run/pipeline/extract_history.py                     # prior-utilisation codes (tuned recipe)
+.venv/bin/python run/pipeline/extract_notes_tfidf.py                 # TF-IDF report features (tuned recipe)
 
 # 3. one run
 .venv/bin/python run/train.py model=moe_health task=mortality seed=0                     # paper settings
@@ -90,11 +91,11 @@ Select the cohort with `cohort=corrected` (the default) or `cohort=faithful`.
 | Group | Options |
 |---|---|
 | `model.*` (`run/conf/model/moe_health.yaml`) | `experts` (all7, observed4), `pretrain` (superset, exact, generic, none), `top_k`, `gating` (learned, uniform), `missing` (learned, zeros), `expert_output` (repr, logit), `balance` (cv, switch, none), `alpha` |
-| `data.*` (`run/conf/train.yaml`) | `modalities` (any subset of ETI), `ehr_version` (v1, v2), `ehr_stats`, `ehr_delta`, `note_variant` (cls, tok), `cxr_variant` (first, mean), `history` |
+| `data.*` (`run/conf/train.yaml`) | `modalities` (any subset of ETI), `ehr_version` (v1, v2), `ehr_stats`, `ehr_delta`, `note_variant` (cls, tok, tfidf, tok_tfidf), `note_logit`, `cxr_variant` (first, mean), `history` |
 | `train.*` (`run/conf/train.yaml`) | optimiser, early stopping, modality dropout, per-group learning-rate multipliers |
 
 The tuned recipe in `run/conf/recipe/moe_final.yaml` changes only the training settings and the EHR
-inputs. The architecture and the loss are the paper's.
+and note inputs. The architecture and the loss are the paper's.
 
 ## Outputs
 
@@ -109,13 +110,14 @@ Each run writes to `outputs/runs/{exp}/{model}{tag}/{cohort}/{task}/seed{k}/`:
 
 ```
 src/
-  data_module/     cohort rules, EHR variable spec + DuckDB extraction, note sections, history codes, dataset
+  data_module/     cohort rules, EHR variable spec + DuckDB extraction, note sections, TF-IDF note features,
+                   history codes, dataset
   model_module/    encoders, MoE layer (gate, top-k, balance loss), MoE-Health, unimodal model
   trainer_module/  training loop, MoE-Health stages 0 / A / B / C, unimodal training
   metrics_module/  AUROC, AUPRC, F1 at the validation-optimal threshold
 run/
   conf/            Hydra configs: train.yaml, pipeline.yaml, model/, recipe/, paths/
-  pipeline/        build_cohort, extract_{ehr,notes,cxr,history}, launch, collect_results, setup_env
+  pipeline/        build_cohort, extract_{ehr,notes,notes_tfidf,cxr,history}, launch, collect_results, setup_env
   train.py         one (method, cohort, task, seed) run
 tests/             unit and smoke tests on synthetic data
 ```
