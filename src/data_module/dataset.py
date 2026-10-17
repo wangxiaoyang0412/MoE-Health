@@ -51,7 +51,8 @@ class DataConfig:
     cxr_variant: str = "first"  # first (paper) | mean
     use_meds: bool = True
     modalities: str = "ETI"  # Table 2: modalities outside this set are masked for every sample
-    note_variant: str = "cls"  # cls (paper Eq. 7) | tok (mean of token states)
+    note_variant: str = "cls"  # cls (paper Eq. 7) | tok (mean of token states) | tfidf (TF-IDF + SVD) | tok_tfidf
+    note_logit: bool = False  # + cross-fitted TF-IDF logistic-regression logit of the task as a note feature
     ehr_delta: bool = False  # add hours-since-last-measurement channels
     ehr_stats: bool = False  # HAIM-style 48 h summary statistics as an extra EHR-encoder input
     ehr_version: str = "v1"  # v1 (HAIM variable list) | v2 (extended ICU variable set)
@@ -143,6 +144,23 @@ def _check_order(feat: Path, order_file: str, cohort: pd.DataFrame) -> None:
         raise ValueError(f"{order_file} does not match cohort.parquet; re-run the feature extraction")
 
 
+def _note_features(feat: Path, cfg: DataConfig, rows: np.ndarray, cohort: pd.DataFrame) -> np.ndarray:
+    """Admission-level note features of the configured variant for ``rows`` (before standardisation)."""
+    parts = []
+    if cfg.note_variant in ("cls", "tok", "tok_tfidf"):
+        name = "note_emb.npy" if cfg.note_variant == "cls" else "note_emb_tok.npy"
+        parts.append(np.load(feat / name, mmap_mode="r")[rows])
+    if cfg.note_variant in ("tfidf", "tok_tfidf"):
+        _check_order(feat, "tfidf_hadm.npy", cohort)
+        parts.append(np.load(feat / f"note_emb_tfidf_s{cfg.seed}.npy", mmap_mode="r")[rows])
+    if not parts:
+        raise ValueError(f"unknown note_variant '{cfg.note_variant}'")
+    if cfg.note_logit:
+        _check_order(feat, "tfidf_hadm.npy", cohort)
+        parts.append(np.load(feat / f"note_tfidf_logit_{cfg.cohort}_{cfg.task}_s{cfg.seed}.npy")[rows, None])
+    return np.concatenate([np.asarray(p, dtype=np.float32) for p in parts], axis=1)
+
+
 def _standardize(x: np.ndarray, present: np.ndarray, train_rows: np.ndarray) -> np.ndarray:
     ref = x[train_rows][present[train_rows]]
     mean, std = ref.mean(axis=0), ref.std(axis=0) + 1e-6
@@ -191,8 +209,7 @@ def load_task_data(cfg: DataConfig, device: str | torch.device = "cpu") -> TaskD
         history_cards = [len(hmeta["vocab"][c]) for c in hmeta["columns"]]
     has_note = cohort["has_note"].to_numpy()[rows].astype(bool)
     has_cxr = cohort["has_cxr"].to_numpy()[rows].astype(bool)
-    note_file = "note_emb.npy" if cfg.note_variant == "cls" else "note_emb_tok.npy"
-    note = _standardize(np.load(feat / note_file, mmap_mode="r")[rows], has_note, pos["train"])
+    note = _standardize(_note_features(feat, cfg, rows, cohort), has_note, pos["train"])
     cxr_file = "cxr_emb.npy" if cfg.cxr_variant == "first" else "cxr_emb_mean.npy"
     cxr = _standardize(np.load(feat / cxr_file, mmap_mode="r")[rows], has_cxr, pos["train"])
     mask = np.stack([np.ones(len(rows)), has_note, has_cxr], axis=1).astype(np.float32)

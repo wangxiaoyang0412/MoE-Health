@@ -37,6 +37,15 @@ cxr:
   num_workers: 16
   device: cuda:0
 
+tfidf:                   # TF-IDF note features (run/pipeline/extract_notes_tfidf.py), fit per split seed on train
+  ngram_max: 2
+  min_df: 5
+  max_features: 100000
+  svd_dim: 256
+  folds: 5               # out-of-fold logits on train rows, folds grouped by patient
+  c: 1.0                 # logistic-regression inverse regularisation
+  n_jobs: 6
+
 hydra:
   run:
     dir: ${paths.outputs}/logs/${hydra.job.name}/${now:%Y-%m-%d_%H-%M-%S}

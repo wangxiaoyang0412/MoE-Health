@@ -40,7 +40,20 @@ def _write(root: Path, n: int = 60) -> DataConfig:
     np.save(root / "history_hadm.npy", cohort["hadm_id"].to_numpy())
     (root / "history_meta.json").write_text(json.dumps({"columns": ["h1", "h2"],
                                                         "vocab": {"h1": ["U", "a", "b"], "h2": ["U", "a", "b"]}}))
+    np.save(root / "note_emb_tok.npy", rng.normal(size=(n, 6)).astype(np.float32))
+    np.save(root / "note_emb_tfidf_s0.npy", rng.normal(size=(n, 4)).astype(np.float32))
+    np.save(root / "note_tfidf_logit_corrected_mortality_s0.npy", rng.normal(size=n).astype(np.float32))
+    np.save(root / "tfidf_hadm.npy", cohort["hadm_id"].to_numpy())
     return DataConfig(feature_dir=str(root), cohort_path=str(root / "cohort.parquet"))
+
+
+def test_note_variants(tmp_path: Path) -> None:
+    cfg = _write(tmp_path / "f")
+    dims = {(v, logit): load_task_data(DataConfig(**{**cfg.__dict__, "note_variant": v, "note_logit": logit})).note_dim
+            for v, logit in (("cls", False), ("tfidf", False), ("tok_tfidf", False), ("tfidf", True))}
+    assert dims == {("cls", False): 6, ("tfidf", False): 4, ("tok_tfidf", False): 10, ("tfidf", True): 5}
+    with pytest.raises(ValueError, match="note_variant"):
+        load_task_data(DataConfig(**{**cfg.__dict__, "note_variant": "bow"}))
 
 
 def test_load_task_data_shapes_and_filters(tmp_path: Path) -> None:

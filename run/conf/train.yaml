@@ -14,7 +14,8 @@ data:
   cxr_variant: first   # first AP image in 48 h (paper) | mean
   use_meds: true
   modalities: ETI      # Table 2: mask modalities outside this set for every sample
-  note_variant: cls    # cls (paper Eq. 7) | tok (mean of token states)
+  note_variant: cls    # cls (paper Eq. 7) | tok (mean of token states) | tfidf (TF-IDF + SVD) | tok_tfidf
+  note_logit: false    # + cross-fitted TF-IDF logistic-regression logit of the task as a note feature
   ehr_delta: false     # add hours-since-last-measurement channels to the BiLSTM input
   ehr_stats: false     # add HAIM-style 48 h summary statistics as an EHR-encoder branch
   ehr_version: v1      # v1 (HAIM variable list) | v2 (extended ICU variable set)

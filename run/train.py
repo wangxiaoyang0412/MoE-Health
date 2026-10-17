@@ -63,7 +63,7 @@ def main(cfg: DictConfig) -> None:
         use_meds=bool(cfg.data.use_meds), modalities=str(cfg.data.modalities),
         note_variant=str(cfg.data.get("note_variant", "cls")), ehr_delta=bool(cfg.data.get("ehr_delta", False)),
         ehr_stats=bool(cfg.data.get("ehr_stats", False)), ehr_version=str(cfg.data.get("ehr_version", "v1")),
-        history=bool(cfg.data.get("history", False)),
+        history=bool(cfg.data.get("history", False)), note_logit=bool(cfg.data.get("note_logit", False)),
     )
     data = DatasetFactory("mimic_mm")(dcfg, device=device)
     result = MethodFactory(str(cfg.model.method))(cfg, data, device, gen)
