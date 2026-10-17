@@ -5,7 +5,7 @@ patients with at least one MIMIC-CXR study), built on MIMIC-IV v1.0.
 
 Two label sets are produced:
 
-- ``*_faithful``: the definitions used in the paper
+- ``*_faithful``: labels on all admissions of the cohort (paper Fig. 3)
   (death = discharge_location DIED, readmission searched inside the cohort table).
 - corrected (no suffix): in-hospital mortality from ``hospital_expire_flag``,
   readmission searched in the full admissions table with in-hospital deaths
@@ -103,7 +103,7 @@ def select_cxr_in_window(
 ) -> pd.DataFrame:
     """AP images taken after admission, before discharge and within the window.
 
-    Window rule of the paper: admittime < t < dischtime and t - admittime < window.
+    Window rule: admittime < t < dischtime and t - admittime < window.
     ``is_first`` marks the earliest image per admission (the paper's input image).
     """
     meta = metadata.loc[metadata["ViewCodeSequence_CodeMeaning"] == cfg.cxr_view].copy()
@@ -134,7 +134,7 @@ def select_notes_in_window(
 ) -> pd.DataFrame:
     """Radiology reports with 0 < t - admittime <= window and t < dischtime.
 
-    Rows with any missing field are dropped first, as in the paper's pipeline.
+    Rows with any missing field are dropped first.
     """
     n = notes.dropna().copy()
     n[["subject_id", "hadm_id"]] = n[["subject_id", "hadm_id"]].astype("int64")
@@ -166,7 +166,7 @@ def add_modality_flags(
 
 
 def readmission_within_table(df: pd.DataFrame, days: int) -> pd.Series:
-    """Readmission as defined in the paper: next admission *inside this table* within ``days``.
+    """Readmission searched inside this table: next admission within ``days`` of discharge.
 
     gap = next admittime - dischtime, label 1 if gap <= days (negative gaps from
     overlapping stays also count), last admission -> 0.
