@@ -1,0 +1,13 @@
+# Data locations. Edit this file, or copy it to run/conf/paths/local.yaml (git-ignored) and pass
+# `paths=local` to the scripts. The source tables are read uncompressed (gunzip the .csv.gz files).
+mimiciv: /data/physionet.org/files/mimiciv/1.0
+haim_key_ids: /data/physionet.org/files/haim-multimodal/1.0.1/haim_mimiciv_key_ids.csv
+cxr_root: /data/physionet.org/files/mimic-cxr-jpg/2.0.0
+note_root: /data/physionet.org/files/mimic-iv-note/2.2/note
+
+# Derived data (cohort, features, runs) stay next to the code and are git-ignored.
+outputs: outputs
+cohort_dir: ${.outputs}/cohort
+feature_dir: ${.outputs}/features
+run_dir: ${.outputs}/runs
+hf_home: null              # Hugging Face cache directory; null = library default

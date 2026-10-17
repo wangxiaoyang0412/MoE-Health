@@ -1,0 +1,24 @@
+# MIMIC data and every file derived from it are credentialed PhysioNet data: never commit them.
+*.pkl
+*.pickle
+*.parquet
+*.npy
+*.npz
+*.pt
+*.pth
+*.csv
+*.csv.gz
+data/
+outputs/
+
+# Local data paths (copy of run/conf/paths/default.yaml)
+run/conf/paths/local.yaml
+
+# Python / tooling
+__pycache__/
+*.egg-info/
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.DS_Store

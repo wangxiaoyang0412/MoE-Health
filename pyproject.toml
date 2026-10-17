@@ -1,0 +1,44 @@
+[project]
+name = "moe-health"
+version = "0.1.0"
+description = "MoE-Health: a mixture-of-experts framework for robust multimodal healthcare prediction (ACM BCB 2025)"
+requires-python = ">=3.10"
+# torch / torchvision are installed separately (CUDA 12.6 wheels), see run/pipeline/setup_env.sh
+dependencies = [
+    "numpy>=1.26",
+    "pandas>=2.1",
+    "pyarrow>=14",
+    "duckdb>=1.0",
+    "scikit-learn>=1.4",
+    "hydra-core>=1.3",
+    "omegaconf>=2.3",
+    "tqdm>=4.66",
+    "transformers>=4.44",
+    "torchxrayvision>=1.2",
+    "pillow>=10",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.5", "mypy>=1.10"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["src*"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.mypy]
+python_version = "3.10"
+# pandas, scikit-learn, torchvision and torchxrayvision ship without type information.
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
