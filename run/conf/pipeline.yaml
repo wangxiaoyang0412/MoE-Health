@@ -1,0 +1,44 @@
+# Data pipeline (cohort -> features), run from the project root:
+#   .venv/bin/python run/pipeline/build_cohort.py
+defaults:
+  - paths: default
+  - _self_
+
+cohort:
+  window_hours: 48
+  cxr_view: antero-posterior
+  readmission_days: 30
+  long_los_hours: 168
+  min_los_hours: 48          # corrected cohort: still in hospital at prediction time
+  seeds: [0, 1, 2, 3, 4]
+  n_folds: 10                # 80/10/10: fold 0 = test, fold 1 = val
+  # Check: the faithful cohort must match the counts in paper Fig. 3.
+  expected_faithful:
+    n: 31088
+    ETI: 11636
+    ET: 12160
+    EI: 581
+    E: 6711
+
+ehr:
+  threads: 64
+  overwrite: false
+  version: v1            # v1 (HAIM list) | v2 (extended; writes only *_v2 files)
+
+notes:
+  model: emilyalsentzer/Bio_ClinicalBERT
+  max_length: 512
+  batch_size: 128
+  device: cuda:0
+
+cxr:
+  weights: densenet121-res224-chex
+  batch_size: 64
+  num_workers: 16
+  device: cuda:0
+
+hydra:
+  run:
+    dir: ${paths.outputs}/logs/${hydra.job.name}/${now:%Y-%m-%d_%H-%M-%S}
+  job:
+    chdir: false
